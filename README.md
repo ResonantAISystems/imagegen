@@ -1,146 +1,139 @@
-# ✨ Sovereign AI Collective — SDXL Image Generator  
-### High-fidelity local image generation with Juggernaut XL, RealVis XL, ControlNet, and IP-Adapter
+# Sovereign AI Collective — SDXL Image Generator
 
-This repository contains a fully local, GPU-accelerated SDXL generator featuring a neon-themed Gradio UI and advanced model controls. Build stunning, photorealistic images using industry-leading techniques such as ControlNet (Depth/Canny) and IP-Adapter face/style conditioning.
+High-fidelity local image generation with Juggernaut XL, RealVis XL, ControlNet, and IP-Adapter.
 
----
-
-# 📖 Table of Contents
-- [🚀 Features](#-features)
-- [📦 Installation & Setup](#-installation--setup)
-- [🧩 Model Downloads](#-model-downloads)
-- [▶️ Running the GUI](#️-running-the-gui)
-- [📁 Project Structure](#-project-structure)
-- [🧠 Usage Tips](#-usage-tips)
-- [🐛 Troubleshooting](#-troubleshooting)
-- [❤️ Credits](#️-credits)
+This repository contains a fully local, GPU-accelerated SDXL image generator featuring a neon-styled Gradio UI, advanced model controls, and support for state-of-the-art SDXL-based architectures including ControlNet (Depth/Canny) and IP-Adapter. The system is designed for fast experimentation, production-quality output, and complete offline operation.
 
 ---
 
-# 🚀 Features
+## Features
 
-### ✔ **State-of-the-Art SDXL Models**
-- **Juggernaut XL v9** — best-in-class realism  
-- **RealVis XL v4** — ultra-clean portrait & environment rendering  
+- **State-of-the-Art SDXL Models**
+  - Juggernaut XL v9 — hyper-realistic, cinematic lighting
+  - RealVis XL v4 — strong portrait fidelity, clean detail
 
-### ✔ **ControlNet SDXL Integration**
-- **Depth** → preserves layout & composition  
-- **Canny** → preserves edges & shapes  
+- **ControlNet SDXL**
+  - Depth — preserves layout, distance, and scene composition
+  - Canny — preserves silhouettes, shapes, and outlines
 
-### ✔ **IP-Adapter (SDXL + H94)**
-- Face reference  
-- Style reference  
-- Appearance-locked subject consistency  
+- **IP-Adapter (SDXL + h94)**
+  - Facial and style reference
+  - Identity-consistent generations
 
-### ✔ **Dynamic Model Switching**
-Swap base models, enable/disable ControlNet, change strengths, all live in-UI.
+- **Dynamic Model Switching**
+  - Load/unload base models and ControlNet modules inside the GUI
 
-### ✔ **Neon Cyber-Aesthetic GUI**
-Cyan/Magenta on dark grey theme, optimized for clarity & comfort.
+- **Modern Neon UI (Cyan/Magenta)**
+  - Optimized for readability and comfort during long generation sessions
 
-### ✔ **No Cloud, No Telemetry**
-All inference is **100% local**, GPU only.
+- **Private, Offline, Fully Local**
+  - No external APIs, no telemetry
 
 ---
 
-# 📦 Installation & Setup
+## Installation & Setup
 
-## 1. Clone the Repository
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/ResonantAISystems/playtime.git
-cd playtime
-2. Create & Activate a Virtual Environment
-bash
-Copy code
+git clone https://github.com/ResonantAISystems/imagegen.git
+cd imagegen
+```
+
+### 2. Create & Activate a Virtual Environment
+
+```bash
 python3 -m venv venv
 source venv/bin/activate
-3. Install Dependencies
-bash
-Copy code
+```
+
+> Re-activate the venv each time with:
+> `source venv/bin/activate`
+
+### 3. Install Dependencies
+
+```bash
 pip install -r requirements.txt
-If missing, generate a requirements.txt:
+```
 
-bash
-Copy code
+If you need to regenerate `requirements.txt`:
+
+```bash
 pip freeze > requirements.txt
-🧩 Model Downloads
-All large model files are downloaded automatically:
+```
 
-bash
-Copy code
+---
+
+## Model Downloads
+
+All required SDXL models can be downloaded automatically:
+
+```bash
 python download_all_assets.py
-This fetches:
+```
 
-Juggernaut XL v9
+This script fetches:
 
-RealVisXL v4
+- Juggernaut XL v9
+- RealVis XL v4
+- RealVis XL v4 Inpaint
+- ControlNet Depth SDXL
+- ControlNet Canny SDXL
+- IP-Adapter SDXL
+- IP-Adapter h94
 
-RealVisXL-Inpaint
+Models are stored in the `models/` directory (ignored by git).
 
-ControlNet Depth SDXL
+If a model requires HuggingFace authentication:
 
-ControlNet Canny SDXL
-
-IP-Adapter SDXL
-
-IP-Adapter h94
-
-🔐 If any model requires HuggingFace authentication:
-bash
-Copy code
+```bash
 export HUGGINGFACE_HUB_TOKEN="hf_your_token_here"
-Or log in interactively:
-
-bash
-Copy code
+# or
 huggingface-cli login
-▶️ Running the GUI
-Once the virtual environment is activated:
+```
 
-bash
-Copy code
+---
+
+## Running the GUI
+
+Once the virtual environment is active:
+
+```bash
 python generate_gui.py
-The Gradio interface will be available at:
+```
 
-cpp
-Copy code
+The interface will be available in your browser at:
+
+```text
 http://0.0.0.0:7860
-Features include:
+```
 
-Positive/Negative prompt fields
+The GUI provides:
 
-Base model selector
+- Positive / Negative prompt fields
+- Base model selector (Juggernaut XL v9 / RealVis XL v4)
+- ControlNet selector (None / Depth / Canny)
+- Control image upload and strength slider
+- Scheduler, steps, and guidance controls
+- Resolution & batch settings
+- Optional 4K upscaling
+- System monitor panel
+- Output preview and generation info
 
-ControlNet type selector
+---
 
-Control image upload
+## Project Structure
 
-Control strength slider
-
-Scheduler settings (DPM++, Euler, DDIM, LMS)
-
-Resolution controls
-
-Batch rendering
-
-4K Upscaler
-
-System monitor
-
-Output preview
-
-📁 Project Structure
-text
-Copy code
-playtime/
+```text
+imagegen/
 │
-├── generate_gui.py              # Main SDXL GUI (Juggernaut/RealVis + ControlNet + IP-Adapter)
-├── download_all_assets.py       # Automated model downloader
-├── generate_ultra.py            # Optional CLI generator
-├── generate_enhanced.py         # Optional CLI generator
+├── generate_gui.py           # Main SDXL GUI
+├── download_all_assets.py    # Automated model downloader
+├── requirements.txt
+├── README.md
+├── LICENSE
 │
-├── models/                      # <-- NOT tracked by Git (see .gitignore)
+├── models/                   # Large model weights (git-ignored)
 │   ├── juggernaut-xl-v9/
 │   ├── realvisxl-v4/
 │   ├── realvisxl-v4-inpaint/
@@ -149,60 +142,60 @@ playtime/
 │   ├── ip-adapter-sdxl/
 │   └── ip-adapter-h94/
 │
-├── requirements.txt
-└── README.md
-🧠 Usage Tips
-Best SDXL Settings
-makefile
-Copy code
-Steps: 35–55  
-CFG (Guidance): 5.5–7.0  
-Scheduler: DPM++ (Recommended)
-ControlNet Strength
-Depth: 0.6–0.9
+└── .gitignore
+```
 
-Canny: 0.4–0.7
+---
 
-For consistent faces
-Use IP-Adapter with a clean reference portrait.
+## Usage Tips
 
-For stable environments
-Use Depth ControlNet with the original scene as the control image.
+- Recommended SDXL settings:
+  - Steps: 35–55
+  - CFG (guidance): 5.5–7.0
+  - Scheduler: DPM++ (recommended)
 
-For fast debugging
-Use a fixed seed such as:
+- ControlNet strength:
+  - Depth: 0.6–0.9
+  - Canny: 0.4–0.7
 
-Copy code
-12345
-🐛 Troubleshooting
-“ControlNet isn’t doing anything”
-Make sure a control image is loaded and strength > 0.
+- For consistent faces:
+  - Use IP-Adapter with a clean portrait as reference.
 
-“My face looks distorted”
-Increase steps, reduce CFG, and add these to negative prompt:
+- For consistent environments:
+  - Use Depth ControlNet with an environment reference.
 
-nginx
-Copy code
-distorted face, merged face, warped facial features, incorrect anatomy
-“Models didn’t download”
-Ensure your HuggingFace token is set:
+- For debugging:
+  - Use a fixed seed (e.g., 12345) and adjust one parameter at a time.
 
-bash
-Copy code
-export HUGGINGFACE_HUB_TOKEN="hf_xxx"
-❤️ Credits
-This project utilizes technologies from:
+---
 
-RunDiffusion — Juggernaut XL v9
+## Troubleshooting
 
-SG161222 / RealVisXL
+- **ControlNet has no visible effect**
+  - Ensure a control image is loaded
+  - Strength > 0
+  - Correct ControlNet type selected
 
-StabilityAI — SDXL
+- **Faces appear distorted**
+  - Lower CFG and/or increase steps
+  - Add to your negative prompt:
+    - `distorted face, merged face, warped facial features, incorrect anatomy`
 
-H94 / IP-Adapter
+- **Models failed to download**
+  - Check your HuggingFace token:
+    - `export HUGGINGFACE_HUB_TOKEN="hf_xxx"`
 
-HuggingFace Diffusers
+---
 
-Gradio
+## Credits
 
-Developed by Sovereign AI Collective.
+This project builds on:
+
+- RunDiffusion — Juggernaut XL v9
+- SG161222 — RealVisXL
+- Stability AI — SDXL core models
+- H94 — IP-Adapter
+- HuggingFace Diffusers
+- Gradio
+
+Developed by **Sovereign AI Collective**.
