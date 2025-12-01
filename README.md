@@ -34,9 +34,6 @@ This repository contains a fully local, GPU-accelerated SDXL image generator fea
   - No external APIs, no telemetry
 
 ---
-<p align="center">
-  <img src="theforge.png" width="80%" />
-</p>
 
 ## Installation & Setup
 
@@ -129,6 +126,14 @@ The GUI provides:
 
 ---
 
+<p align="center">
+  <img src="example.png" width="80%" />
+</p>
+
+
+---
+
+
 ## Project Structure
 
 ```text
@@ -173,6 +178,12 @@ imagegen/
 
 - For debugging:
   - Use a fixed seed (e.g., 12345) and adjust one parameter at a time.
+
+---
+
+<p align="center">
+  <img src="theforge.png" width="80%" />
+</p>
 
 ---
 
