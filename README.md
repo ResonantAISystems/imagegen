@@ -35,7 +35,7 @@ This repository contains a fully local, GPU-accelerated SDXL image generator fea
 
 ---
 <p align="center">
-  <img src="theforge.png" width="45%" />
+  <img src="theforge.png" width="80%" />
 </p>
 
 ## Installation & Setup
