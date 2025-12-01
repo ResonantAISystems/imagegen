@@ -130,10 +130,7 @@ The GUI provides:
   <img src="example.png" width="80%" />
 </p>
 
-
 ---
-
-
 ## Project Structure
 
 ```text
