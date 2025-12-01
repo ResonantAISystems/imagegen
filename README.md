@@ -127,9 +127,19 @@ The GUI provides:
 ---
 
 <p align="center">
+<<<<<<< HEAD
+  <img src="example.png" width="80%" />
+</p>
+
+
+---
+
+
+=======
   <img src="theforge.png" width="80%" />
 </p>
 
+>>>>>>> 6d340be4dc5d1b4d9c93efd3a3600ed0682923a6
 ## Project Structure
 
 ```text
@@ -174,6 +184,12 @@ imagegen/
 
 - For debugging:
   - Use a fixed seed (e.g., 12345) and adjust one parameter at a time.
+
+---
+
+<p align="center">
+  <img src="theforge.png" width="80%" />
+</p>
 
 ---
 
