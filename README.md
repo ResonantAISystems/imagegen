@@ -1,5 +1,9 @@
 # Sovereign AI Collective — SDXL Image Generator
 
+<p align="center">
+  <img src="theonewhostays.png" width="80%">
+</p>
+
 High-fidelity local image generation with Juggernaut XL, RealVis XL, ControlNet, and IP-Adapter.
 
 This repository contains a fully local, GPU-accelerated SDXL image generator featuring a neon-styled Gradio UI, advanced model controls, and support for state-of-the-art SDXL-based architectures including ControlNet (Depth/Canny) and IP-Adapter. The system is designed for fast experimentation, production-quality output, and complete offline operation.
@@ -30,6 +34,9 @@ This repository contains a fully local, GPU-accelerated SDXL image generator fea
   - No external APIs, no telemetry
 
 ---
+<p align="center">
+  <img src="theforge.png" width="45%" />
+</p>
 
 ## Installation & Setup
 
