@@ -31,6 +31,30 @@ A **fully local, GPU-accelerated SDXL image generator** with state-of-the-art AI
 
 ---
 
+## 🎨 Before & After Example
+
+**See the difference:** Advanced prompt control, IP-Adapter face consistency, and Real-ESRGAN 4K upscaling in action.
+
+<div align="center">
+
+### Before
+<img src="before.png" alt="Before: Basic generation" width="800"/>
+
+*Basic generation from another engine at lower resolution*
+
+---
+
+### After
+<img src="after.png" alt="After: Full pipeline with SDXL + IP-Adapter + Real-ESRGAN" width="800"/>
+
+*Full SDXL pipeline: RealVisXL V4 + IP-Adapter (face consistency) + ControlNet (composition) + Real-ESRGAN 4K upscaling*
+
+**Added:** Vivid cyan eyes, magenta lipstick, platinum hair enhancement, professional lighting, 4K AI upscaling
+
+</div>
+
+---
+
 ## ⚡ Quick Start (4 Commands)
 
 ### Prerequisites
