@@ -1,28 +1,50 @@
-```gitignore
-# ---------------------------------------------------------
-# Python & environment
-# ---------------------------------------------------------
+# =============================================================================
+# Sovereign AI Collective - SDXL Image Generator
+# Git Ignore Configuration
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Python & Environment
+# -----------------------------------------------------------------------------
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
 
-# Virtual environment
+# Virtual environments
 venv/
+env/
+ENV/
 .env/
 .env.bak/
+.venv/
+
+# Python build artifacts
+*.dist-info/
+*.egg-info/
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Jupyter
 .ipynb_checkpoints/
+*.ipynb
 
-# ---------------------------------------------------------
-# Large AI model directories (DO NOT commit)
-# ---------------------------------------------------------
+# -----------------------------------------------------------------------------
+# AI Models & Weights (DO NOT COMMIT - Too large for Git)
+# -----------------------------------------------------------------------------
+
+# Model directories (primary exclusion)
 models/
 */models/
 **/models/
 
-# Model subfolders (safety)
+# Specific model folders (safety net)
 juggernaut-xl-v9/
 realvisxl-v4/
 realvisxl-v4-inpaint/
@@ -31,15 +53,193 @@ controlnet-canny-sdxl-1.0/
 ip-adapter-sdxl/
 ip-adapter-h94/
 
-# ---------------------------------------------------------
-# OS / IDE clutter
-# ---------------------------------------------------------
+# Real-ESRGAN weights
+weights/
+**/weights/
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+
+# HuggingFace cache (can be several GB)
+.cache/
+huggingface/
+**/.cache/
+
+# -----------------------------------------------------------------------------
+# Generated Images & Outputs (DO NOT COMMIT - User-specific)
+# -----------------------------------------------------------------------------
+
+# Output directories
+sac.output/
+output/
+outputs/
+generated/
+**/sac.output/
+
+# Image files in root (safety)
+/*.png
+/*.jpg
+/*.jpeg
+/*.webp
+
+# Keep example images (if you have them)
+!theonewhostays.png
+!theforge.png
+!examples/*.png
+!docs/*.png
+
+# Temporary processing files
+*.tmp
+*.temp
+temp_*
+tmp_*
+
+# -----------------------------------------------------------------------------
+# OS & IDE Clutter
+# -----------------------------------------------------------------------------
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
+*.swn
+.project
+.settings/
+.classpath
 
-# Logs
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+# -----------------------------------------------------------------------------
+# Logs & Debug
+# -----------------------------------------------------------------------------
 *.log
+*.log.*
+logs/
+debug.log
+error.log
+launch.log
+
+# -----------------------------------------------------------------------------
+# Testing & Development
+# -----------------------------------------------------------------------------
+
+# Test outputs
+test_output/
+test_images/
+tests/outputs/
+*.test.png
+
+# Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# -----------------------------------------------------------------------------
+# System & Runtime
+# -----------------------------------------------------------------------------
+
+# Process IDs
+*.pid
+*.seed
+*.pid.lock
+
+# PyTorch temp files
+torch_extensions/
+
+# Gradio temp
+gradio_cached_examples/
+flagged/
+
+# -----------------------------------------------------------------------------
+# Documentation Build (if using Sphinx or similar)
+# -----------------------------------------------------------------------------
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# -----------------------------------------------------------------------------
+# Archives & Compressed Files
+# -----------------------------------------------------------------------------
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# Except release archives (if needed)
+!releases/*.zip
+
+# -----------------------------------------------------------------------------
+# Security & Credentials (CRITICAL)
+# -----------------------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+secrets.txt
+credentials.json
+*.key
+*.pem
+*.token
+
+# HuggingFace tokens
+.huggingface_token
+hf_token.txt
+
+# -----------------------------------------------------------------------------
+# Git-specific
+# -----------------------------------------------------------------------------
+.git/
+.gitattributes
+.gitmodules
+
+# -----------------------------------------------------------------------------
+# Miscellaneous
+# -----------------------------------------------------------------------------
+
+# Backup files
+*.bak
+*.backup
+*~
+*.orig
+
+# Editor swap files
+*.swp
+*.swo
+
+# Temporary download files
+*.part
+*.crdownload
+
+# System Files
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent

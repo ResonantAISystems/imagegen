@@ -17,6 +17,14 @@ import subprocess
 import cv2
 import numpy as np
 
+# Real-ESRGAN for AI upscaling (ai-forever implementation)
+try:
+    from RealESRGAN import RealESRGAN
+    REALESRGAN_AVAILABLE = True
+except ImportError:
+    print("⚠ Real-ESRGAN not available. Install with: pip install git+https://github.com/ai-forever/Real-ESRGAN.git")
+    REALESRGAN_AVAILABLE = False
+
 # -------------------------------------------------------------------
 # Paths & globals
 # -------------------------------------------------------------------
@@ -53,6 +61,59 @@ compel = None
 current_base_model = None
 current_controlnet = None
 ip_adapter_loaded = False
+realesrgan_upscaler = None  # Real-ESRGAN upscaler instance
+
+# -------------------------------------------------------------------
+# Real-ESRGAN Upscaler Initialization
+# -------------------------------------------------------------------
+
+def get_realesrgan_upscaler():
+    """Initialize and return Real-ESRGAN upscaler (lazy loading) - ai-forever implementation"""
+    global realesrgan_upscaler
+    
+    if not REALESRGAN_AVAILABLE:
+        return None
+    
+    if realesrgan_upscaler is not None:
+        return realesrgan_upscaler
+    
+    try:
+        print("Initializing Real-ESRGAN upscaler (ai-forever)...")
+        
+        # Initialize ai-forever Real-ESRGAN
+        realesrgan_upscaler = RealESRGAN(torch.device(device), scale=4)
+        
+        # Load weights (auto-downloads on first use)
+        realesrgan_upscaler.load_weights('weights/RealESRGAN_x4.pth', download=True)
+        
+        print("✓ Real-ESRGAN upscaler initialized (4x scale)")
+        return realesrgan_upscaler
+    except Exception as e:
+        print(f"❌ Failed to initialize Real-ESRGAN: {e}")
+        return None
+
+
+def upscale_image_realesrgan(image: Image.Image, target_w: int, target_h: int) -> Image.Image:
+    """Upscale image using Real-ESRGAN AI upscaler (ai-forever implementation)"""
+    upscaler = get_realesrgan_upscaler()
+    
+    if upscaler is None:
+        print("Real-ESRGAN not available, falling back to LANCZOS")
+        return image.resize((target_w, target_h), Image.Resampling.LANCZOS)
+    
+    try:
+        # ai-forever API takes PIL Image directly
+        result = upscaler.predict(image.convert('RGB'))
+        
+        # Resize to exact target dimensions if needed
+        if result.size != (target_w, target_h):
+            result = result.resize((target_w, target_h), Image.Resampling.LANCZOS)
+        
+        print(f"✓ Real-ESRGAN upscaled: {image.size} → {result.size}")
+        return result
+    except Exception as e:
+        print(f"❌ Real-ESRGAN upscaling failed: {e}, falling back to LANCZOS")
+        return image.resize((target_w, target_h), Image.Resampling.LANCZOS)
 
 # -------------------------------------------------------------------
 # Utility functions
@@ -344,6 +405,7 @@ def generate_image(
     seed,
     batch_count,
     upscale_to_4k,
+    upscale_method,  # NEW: "LANCZOS" or "Real-ESRGAN"
 ):
     """Generate image(s) with optional ControlNet, IP-Adapter & 4K upscaling"""
     
@@ -433,7 +495,8 @@ def generate_image(
             
             # Upscale if requested (preserving aspect ratio)
             if upscale_to_4k:
-                print("Upscaling to 4K (preserving aspect ratio)...")
+                upscale_method_display = upscale_method if upscale_method else "LANCZOS"
+                print(f"Upscaling to 4K using {upscale_method_display} (preserving aspect ratio)...")
                 
                 # Calculate 4K dimensions while preserving aspect ratio
                 aspect_ratio = w / h
@@ -444,7 +507,11 @@ def generate_image(
                     target_h = 2160
                     target_w = int(2160 * aspect_ratio)
                 
-                image_4k = image.resize((target_w, target_h), Image.Resampling.LANCZOS)
+                # Choose upscaling method
+                if upscale_method == "Real-ESRGAN (AI - Best Quality)":
+                    image_4k = upscale_image_realesrgan(image, target_w, target_h)
+                else:  # LANCZOS (Fast) or default
+                    image_4k = image.resize((target_w, target_h), Image.Resampling.LANCZOS)
                 
                 # Save both versions
                 filename_original = os.path.join(
@@ -475,12 +542,16 @@ def generate_image(
         if use_ip_adapter:
             features.append(f"IP-Adapter: Scale {ip_adapter_scale}")
         
+        upscale_info = f"{upscale_to_4k}"
+        if upscale_to_4k:
+            upscale_info += f" ({upscale_method})"
+        
         info = f"""✓ Generated {batch_count} image(s) at {w}x{h}
 {', '.join(features)}
 Scheduler: {scheduler_name}
 Steps: {steps}, Guidance: {guidance_scale}
 Seeds: {', '.join(map(str, seeds_used))}
-Upscaled to 4K: {upscale_to_4k}
+Upscaled to 4K: {upscale_info}
 Saved to: {OUTPUT_DIR}"""
         
         # Return all images in gallery format
@@ -700,6 +771,14 @@ canvas, img {
                     info="Preserves aspect ratio when upscaling",
                 )
             
+            # Upscale method selection
+            upscale_method_radio = gr.Radio(
+                choices=["LANCZOS (Fast)", "Real-ESRGAN (AI - Best Quality)"],
+                value="LANCZOS (Fast)",
+                label="Upscale Method",
+                info="LANCZOS is fast, Real-ESRGAN uses AI for superior quality"
+            )
+            
             # Preset buttons
             gr.Markdown("### Quick Presets")
             with gr.Row():
@@ -788,6 +867,7 @@ canvas, img {
             seed_input,
             batch_slider,
             upscale_check,
+            upscale_method_radio,  # NEW: Upscale method selection
         ],
         outputs=[output_gallery, output_info],
     )
