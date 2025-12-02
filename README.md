@@ -40,7 +40,7 @@ A **fully local, GPU-accelerated SDXL image generator** with state-of-the-art AI
 ### Before
 <img src="before.png" alt="Before: Basic generation" width="800"/>
 
-*Basic generation from another engine at lower resolution*
+*Basic generation from another engine then captured monitor with cell camera at 720p*
 
 ---
 
