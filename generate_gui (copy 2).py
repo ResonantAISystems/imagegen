@@ -42,17 +42,12 @@ SCHEDULERS = {
     "LMS": LMSDiscreteScheduler,
 }
 
-# IP-Adapter paths
-IP_ADAPTER_PATH = "./models/ip-adapter-sdxl"
-IP_ADAPTER_IMAGE_ENCODER = "./models/ip-adapter-sdxl/image_encoder"
-
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 pipe = None
 compel = None
 current_base_model = None
 current_controlnet = None
-ip_adapter_loaded = False
 
 # -------------------------------------------------------------------
 # Utility functions
@@ -78,7 +73,7 @@ def preprocess_control_image(image: Image.Image, controlnet_type: str) -> Image.
     Preprocess control image based on ControlNet type.
     
     For Canny: Detect edges using Canny edge detection
-    For Depth: Return as-is (assuming user provides depth map)
+    For Depth: Return as-is (assuming user provides depth map, or we'd need a depth model)
     """
     if controlnet_type == "Canny":
         # Convert PIL to numpy
@@ -99,6 +94,7 @@ def preprocess_control_image(image: Image.Image, controlnet_type: str) -> Image.
     
     elif controlnet_type == "Depth":
         # For depth, we assume user provides a depth map
+        # In production, you'd use a depth estimation model here
         return image
     
     return image
@@ -108,23 +104,19 @@ def preprocess_control_image(image: Image.Image, controlnet_type: str) -> Image.
 # Pipeline loader
 # -------------------------------------------------------------------
 
-def load_pipeline(base_model_name: str, controlnet_name: str, use_ip_adapter: bool = False):
+def load_pipeline(base_model_name: str, controlnet_name: str):
     """
-    Load / swap the SDXL pipeline with optional ControlNet and IP-Adapter.
+    Load / swap the SDXL pipeline with optional ControlNet.
     """
-    global pipe, compel, current_base_model, current_controlnet, ip_adapter_loaded
+    global pipe, compel, current_base_model, current_controlnet
 
-    # Check if we need to reload
-    needs_reload = (
-        pipe is None
-        or base_model_name != current_base_model
-        or controlnet_name != current_controlnet
-        or (use_ip_adapter and not ip_adapter_loaded)
-        or (not use_ip_adapter and ip_adapter_loaded)
-    )
-    
-    if not needs_reload:
-        return f"✓ Using {base_model_name} with {controlnet_name} ControlNet" + (" + IP-Adapter" if use_ip_adapter else "")
+    if (
+        pipe is not None
+        and base_model_name == current_base_model
+        and controlnet_name == current_controlnet
+    ):
+        # No change
+        return f"✓ Using {base_model_name} with {controlnet_name} ControlNet"
 
     base_path = BASE_MODELS[base_model_name]
     cn_path = CONTROLNETS[controlnet_name]
@@ -137,11 +129,6 @@ def load_pipeline(base_model_name: str, controlnet_name: str, use_ip_adapter: bo
     
     if cn_path is not None and not validate_model_path(cn_path, controlnet_name):
         error_msg = f"❌ ControlNet not found: {controlnet_name} at {cn_path}\nRun download_all_assets.py first!"
-        print(error_msg)
-        raise gr.Error(error_msg)
-    
-    if use_ip_adapter and not os.path.exists(IP_ADAPTER_PATH):
-        error_msg = f"❌ IP-Adapter not found at {IP_ADAPTER_PATH}\nRun download_all_assets.py first!"
         print(error_msg)
         raise gr.Error(error_msg)
 
@@ -180,29 +167,6 @@ def load_pipeline(base_model_name: str, controlnet_name: str, use_ip_adapter: bo
         except Exception:
             print("⚠ xformers not available")
 
-        # Load IP-Adapter if requested
-        if use_ip_adapter:
-            print(f"Loading IP-Adapter from {IP_ADAPTER_PATH}")
-            try:
-                # Load IP-Adapter weights into the pipeline
-                pipe_local.load_ip_adapter(
-                    IP_ADAPTER_PATH,
-                    subfolder="",
-                    weight_name="ip-adapter_sdxl.safetensors"
-                )
-                
-                # Set the IP-Adapter scale (can be adjusted per generation)
-                pipe_local.set_ip_adapter_scale(0.6)
-                
-                ip_adapter_loaded = True
-                print("✓ IP-Adapter loaded successfully")
-            except Exception as e:
-                print(f"⚠ IP-Adapter load failed: {e}")
-                print("Continuing without IP-Adapter...")
-                ip_adapter_loaded = False
-        else:
-            ip_adapter_loaded = False
-
         # Rebuild Compel for the new pipe
         compel_local = Compel(
             tokenizer=[pipe_local.tokenizer, pipe_local.tokenizer_2],
@@ -221,10 +185,7 @@ def load_pipeline(base_model_name: str, controlnet_name: str, use_ip_adapter: bo
         print(f"✓ Compel initialized for SDXL with dual text encoders")
         print(f"✓ Output directory: {OUTPUT_DIR}")
 
-        status = f"✓ Loaded {base_model_name} with {controlnet_name} ControlNet"
-        if ip_adapter_loaded:
-            status += " + IP-Adapter"
-        return status
+        return f"✓ Loaded {base_model_name} with {controlnet_name} ControlNet"
     
     except Exception as e:
         error_msg = f"❌ Failed to load pipeline: {str(e)}"
@@ -232,9 +193,9 @@ def load_pipeline(base_model_name: str, controlnet_name: str, use_ip_adapter: bo
         raise gr.Error(error_msg)
 
 
-# Initial load (Juggernaut, no ControlNet, no IP-Adapter)
+# Initial load (Juggernaut, no ControlNet)
 try:
-    load_pipeline("Juggernaut XL v9", "None", use_ip_adapter=False)
+    load_pipeline("Juggernaut XL v9", "None")
 except Exception as e:
     print(f"⚠ Initial model load failed: {e}")
     print("Models may need to be downloaded. Run download_all_assets.py")
@@ -333,9 +294,6 @@ def generate_image(
     controlnet_name,
     control_image,
     controlnet_scale,
-    use_ip_adapter,
-    ip_adapter_image,
-    ip_adapter_scale,
     scheduler_name,
     steps,
     guidance_scale,
@@ -345,11 +303,11 @@ def generate_image(
     batch_count,
     upscale_to_4k,
 ):
-    """Generate image(s) with optional ControlNet, IP-Adapter & 4K upscaling"""
+    """Generate image(s) with optional ControlNet & 4K upscaling"""
     
     try:
         # Make sure correct pipeline is loaded
-        status = load_pipeline(base_model_name, controlnet_name, use_ip_adapter)
+        status = load_pipeline(base_model_name, controlnet_name)
         print(status)
 
         # Set scheduler
@@ -367,15 +325,7 @@ def generate_image(
         if not prompt or prompt.strip() == "":
             raise gr.Error("Please provide a prompt")
         
-        # Validate IP-Adapter requirements
-        if use_ip_adapter and ip_adapter_image is None:
-            raise gr.Error("IP-Adapter enabled but no reference image provided")
-        
-        # Set IP-Adapter scale if using it
-        if use_ip_adapter and ip_adapter_loaded:
-            pipe.set_ip_adapter_scale(float(ip_adapter_scale))
-        
-        # Process prompts with Compel for SDXL
+        # Process prompts with Compel for SDXL (returns embeddings + pooled embeddings)
         conditioning, pooled = compel(prompt)
         negative_conditioning, negative_pooled = compel(negative_prompt)
         
@@ -398,8 +348,7 @@ def generate_image(
             print(
                 f"Generating {i+1}/{batch_count} at {w}x{h}, "
                 f"seed: {current_seed}, scheduler: {scheduler_name}, "
-                f"model: {base_model_name}, controlnet: {controlnet_name}, "
-                f"ip-adapter: {use_ip_adapter}"
+                f"model: {base_model_name}, controlnet: {controlnet_name}"
             )
 
             pipe_kwargs = dict(
@@ -414,7 +363,6 @@ def generate_image(
                 generator=generator,
             )
 
-            # Add ControlNet if enabled
             if CONTROLNETS[controlnet_name] is not None:
                 if control_image is None:
                     raise gr.Error("ControlNet selected but no control image provided.")
@@ -424,10 +372,6 @@ def generate_image(
                 
                 pipe_kwargs["image"] = processed_control
                 pipe_kwargs["controlnet_conditioning_scale"] = float(controlnet_scale)
-            
-            # Add IP-Adapter if enabled
-            if use_ip_adapter and ip_adapter_loaded and ip_adapter_image is not None:
-                pipe_kwargs["ip_adapter_image"] = ip_adapter_image
 
             image = pipe(**pipe_kwargs).images[0]
             
@@ -468,15 +412,9 @@ def generate_image(
                 print(f"✓ Saved: {filename}")
         
         # Generate info text
-        features = []
-        features.append(f"Model: {base_model_name}")
-        if controlnet_name != "None":
-            features.append(f"ControlNet: {controlnet_name}")
-        if use_ip_adapter:
-            features.append(f"IP-Adapter: Scale {ip_adapter_scale}")
-        
         info = f"""✓ Generated {batch_count} image(s) at {w}x{h}
-{', '.join(features)}
+Base model: {base_model_name}
+ControlNet: {controlnet_name}
 Scheduler: {scheduler_name}
 Steps: {steps}, Guidance: {guidance_scale}
 Seeds: {', '.join(map(str, seeds_used))}
@@ -489,8 +427,6 @@ Saved to: {OUTPUT_DIR}"""
     except Exception as e:
         error_msg = f"❌ Generation failed: {str(e)}"
         print(error_msg)
-        import traceback
-        traceback.print_exc()
         raise gr.Error(error_msg)
 
 # -------------------------------------------------------------------
@@ -552,7 +488,7 @@ canvas, img {
 
     gr.Markdown('<div id="sac-header">Sovereign AI Collective Image Generator</div>')
     gr.Markdown(
-        "**Optimized with SDXL (Juggernaut / RealVis) + Compel + DPM++ + IP-Adapter for photorealistic generation.**"
+        "**Optimized with SDXL (Juggernaut / RealVis) + Compel + DPM++ for photorealistic generation.**"
     )
     
     with gr.Row():
@@ -585,10 +521,8 @@ canvas, img {
                     label="ControlNet",
                 )
 
-            # ControlNet section
-            gr.Markdown("### ControlNet (Optional)")
             control_image = gr.Image(
-                label="Control Image (for depth/canny edge guidance)",
+                label="Control Image (for ControlNet – depth/canny)",
                 type="pil",
                 visible=True,
             )
@@ -599,30 +533,6 @@ canvas, img {
                 step=0.05,
                 label="ControlNet Strength",
                 info="0 = ignore, ~0.5–1.0 = normal influence",
-            )
-            
-            # IP-Adapter section
-            gr.Markdown("### IP-Adapter (Face/Style Reference)")
-            with gr.Row():
-                use_ip_adapter_check = gr.Checkbox(
-                    value=False,
-                    label="Enable IP-Adapter",
-                    info="Use reference image for face/style consistency",
-                )
-            
-            ip_adapter_image = gr.Image(
-                label="Reference Image (face or style to match)",
-                type="pil",
-                visible=True,
-            )
-            
-            ip_adapter_scale = gr.Slider(
-                minimum=0.0,
-                maximum=1.0,
-                value=0.6,
-                step=0.05,
-                label="IP-Adapter Strength",
-                info="0 = ignore, 0.6 = balanced, 1.0 = maximum influence",
             )
 
             pipeline_status = gr.Markdown(
@@ -719,7 +629,7 @@ canvas, img {
             
             refresh_btn = gr.Button("🔄 Refresh Stats")
             
-            # Gallery for batch images
+            # Changed to Gallery to show all batch images
             output_gallery = gr.Gallery(
                 label="Generated Images", 
                 show_label=True,
@@ -747,23 +657,18 @@ canvas, img {
     # Refresh system stats
     refresh_btn.click(fn=format_system_stats, outputs=system_monitor)
 
-    # Update pipeline when base model, ControlNet, or IP-Adapter changes
-    def on_pipe_change(base_model_name, controlnet_name, use_ip_adapter):
-        return load_pipeline(base_model_name, controlnet_name, use_ip_adapter)
+    # Update pipeline when base model or ControlNet changes
+    def on_pipe_change(base_model_name, controlnet_name):
+        return load_pipeline(base_model_name, controlnet_name)
 
     base_model_dropdown.change(
         on_pipe_change,
-        inputs=[base_model_dropdown, controlnet_dropdown, use_ip_adapter_check],
+        inputs=[base_model_dropdown, controlnet_dropdown],
         outputs=pipeline_status,
     )
     controlnet_dropdown.change(
         on_pipe_change,
-        inputs=[base_model_dropdown, controlnet_dropdown, use_ip_adapter_check],
-        outputs=pipeline_status,
-    )
-    use_ip_adapter_check.change(
-        on_pipe_change,
-        inputs=[base_model_dropdown, controlnet_dropdown, use_ip_adapter_check],
+        inputs=[base_model_dropdown, controlnet_dropdown],
         outputs=pipeline_status,
     )
     
@@ -777,9 +682,6 @@ canvas, img {
             controlnet_dropdown,
             control_image,
             controlnet_scale,
-            use_ip_adapter_check,
-            ip_adapter_image,
-            ip_adapter_scale,
             scheduler_dropdown,
             steps_slider,
             guidance_slider,
