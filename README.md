@@ -6,7 +6,6 @@
 **Professional-grade local image generation with SDXL, ControlNet, IP-Adapter, and AI upscaling.**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE.txt)
-[![Status](https://img.shields.io/badge/Status-v3.1%20Production-brightgreen)]()
 </div>
 
 ---
