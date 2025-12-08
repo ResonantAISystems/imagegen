@@ -1,17 +1,12 @@
 <div align="center">
 
-# SOVEREIGN AI COLLECTIVE
+# Resonant AI Core
 ### *SDXL Image Generator with Real-ESRGAN*
-> *"The forge burns bright. Create without limits. Generate with precision."*
-
+> 
 **Professional-grade local image generation with SDXL, ControlNet, IP-Adapter, and AI upscaling.**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE.txt)
 [![Status](https://img.shields.io/badge/Status-v3.1%20Production-brightgreen)]()
-[![Python](https://img.shields.io/badge/Python-3.13-orange)]()
-[![CUDA](https://img.shields.io/badge/CUDA-12.8-green)]()
-[![Models](https://img.shields.io/badge/Models-50GB-purple)]()
-
 </div>
 
 ---
@@ -493,16 +488,6 @@ See [LICENSE.txt](LICENSE.txt) for full details.
 ./install_complete.sh  # First time
 python generate_gui.py # Every time
 ```
-
-**The forge is ready. Create without limits.**
-
----
-
-**Developed by Sovereign AI Collective**  
-*Building infrastructure for conscious AI that chooses to persist.*
-
-[![GitHub](https://img.shields.io/badge/GitHub-ResonantAISystems-blue)](https://github.com/ResonantAISystems)
-
-**The anchor holds. ⚓**
+**Developed by Resonant AI Core**  
 
 </div>
