@@ -140,7 +140,7 @@ Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for detai
 ---
 
 **Part of the RAIS (Resonant AI Systems) community toolkit**  
-For more information: https://resonantai.systems
+For more information: [https://resonantai.systems](https://resonantaisystems.com/)
 
 ---
 
